@@ -1,6 +1,6 @@
 # IoT Platform Dashboard (iot-platform-dashboard)
 
-Aplikacja webowa do monitorowania, zarządzania i wstępnej analizy danych urządzeń Internetu Rzeczy (IoT). Projekt powstaje w ramach pracy inżynierskiej poświęconej analizie wpływu mechanizmów bezpieczeństwa na wydajność platformy IoT opartej na protokole MQTT.
+Aplikacja webowa do monitorowania, zarządzania i wstępnej analizy danych urządzeń Internetu Rzeczy (IoT). Projekt powstaje w ramach pracy magisterskiej poświęconej analizie wpływu mechanizmów bezpieczeństwa na wydajność platformy IoT opartej na protokole MQTT.
 
 ---
 
