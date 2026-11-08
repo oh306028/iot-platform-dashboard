@@ -75,7 +75,8 @@ public class AppDbContext : DbContext
 
             entity.Property(m => m.MetricType)
                   .IsRequired()
-                  .HasMaxLength(100);
+                  .HasMaxLength(100)
+                  .HasConversion<string>();
 
             entity.Property(m => m.Value)
                   .HasColumnType("float");
