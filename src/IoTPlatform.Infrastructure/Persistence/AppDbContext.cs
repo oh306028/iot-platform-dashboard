@@ -100,7 +100,8 @@ public class AppDbContext : DbContext
 
             entity.Property(a => a.Severity)
                   .IsRequired()
-                  .HasMaxLength(50);
+                  .HasMaxLength(50)
+                  .HasConversion<string>();
 
             entity.Property(a => a.Message)
                   .IsRequired()

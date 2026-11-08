@@ -47,6 +47,7 @@ try
     builder.Services.AddScoped<IUserService, UserService>();
     builder.Services.AddScoped<IDeviceService, DeviceService>();
     builder.Services.AddScoped<IMeasurementService, MeasurementService>();
+    builder.Services.AddScoped<IAlertService, AlertService>();
 
     builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddJwtBearer(options =>
