@@ -24,9 +24,17 @@ public class MeasurementsController : ControllerBase
         [FromQuery] MetricType? metricType = null,
         [FromQuery] DateTime? from = null,
         [FromQuery] DateTime? to = null,
-        [FromQuery] int limit = 100)
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10)
     {
-        var measurements = await _measurementService.GetByDeviceIdAsync(deviceId, metricType, from, to, limit);
+        var measurements = await _measurementService.GetByDeviceIdAsync(
+            deviceId,
+            metricType,
+            from,
+            to,
+            pageNumber,
+            pageSize);
+
         return Ok(measurements);
     }
 

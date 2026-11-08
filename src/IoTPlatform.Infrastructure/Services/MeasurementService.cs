@@ -1,3 +1,4 @@
+using IoTPlatform.Application.DTOs.Common;
 using IoTPlatform.Application.DTOs.Measurements;
 using IoTPlatform.Application.Interfaces;
 using IoTPlatform.Application.Mapping;
@@ -18,13 +19,20 @@ public class MeasurementService : IMeasurementService
         _context = context;
     }
 
-    public async Task<IEnumerable<MeasurementResponse>> GetByDeviceIdAsync(
+    public async Task<PagedResult<MeasurementResponse>> GetByDeviceIdAsync(
         int deviceId,
         MetricType? metricType = null,
         DateTime? from = null,
         DateTime? to = null,
-        int limit = 100)
+        int pageNumber = 1,
+        int pageSize = 10)
     {
+        if (pageNumber < 1)
+            pageNumber = 1;
+
+        if (pageSize < 1)
+            pageSize = 10;
+
         var query = _context.Measurements
             .AsNoTracking()
             .Where(m => m.DeviceId == deviceId);
@@ -38,12 +46,21 @@ public class MeasurementService : IMeasurementService
         if (to.HasValue)
             query = query.Where(m => m.Timestamp <= to.Value);
 
+        var totalCount = await query.CountAsync();
+
         var measurements = await query
             .OrderByDescending(m => m.Timestamp)
-            .Take(limit)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync();
 
-        return _mapper.ToResponseList(measurements);
+        return new PagedResult<MeasurementResponse>
+        {
+            Items = _mapper.ToResponseList(measurements),
+            PageNumber = pageNumber,
+            PageSize = pageSize,
+            TotalCount = totalCount
+        };
     }
 
     public async Task<IEnumerable<MeasurementResponse>> GetLatestByDeviceIdAsync(int deviceId)
@@ -60,8 +77,8 @@ public class MeasurementService : IMeasurementService
 
     public async Task<MeasurementResponse> CreateAsync(int deviceId, CreateMeasurementRequest request)
     {
-        var deviceExists = await _context.Devices.AnyAsync(d => d.Id == deviceId);
-        if (!deviceExists)
+        var device = await _context.Devices.FirstOrDefaultAsync(d => d.Id == deviceId);
+        if (device is null)
             throw new KeyNotFoundException($"Device with id {deviceId} was not found.");
 
         var measurement = new Measurement
@@ -74,8 +91,40 @@ public class MeasurementService : IMeasurementService
         };
 
         _context.Measurements.Add(measurement);
+
+        EvaluateMeasurementRules(device, measurement);
+
         await _context.SaveChangesAsync();
 
         return _mapper.ToResponse(measurement);
+    }
+
+    private void EvaluateMeasurementRules(Device device, Measurement measurement)
+    {
+        if (measurement.MetricType == MetricType.Temperature)
+        {
+            if (measurement.Value >= 30.0)
+            {
+                _context.Alerts.Add(new Alert
+                {
+                    DeviceId = device.Id,
+                    Severity = AlertSeverity.Critical,
+                    Message = $"Krytyczna temperatura na urządzeniu '{device.Name}': {measurement.Value}{measurement.Unit} (próg: >= 30{measurement.Unit})",
+                    IsAcknowledged = false,
+                    CreatedAt = DateTime.UtcNow
+                });
+            }
+            else if (measurement.Value >= 25.0)
+            {
+                _context.Alerts.Add(new Alert
+                {
+                    DeviceId = device.Id,
+                    Severity = AlertSeverity.Warning,
+                    Message = $"Ostrzeżenie o wysokiej temperaturze na urządzeniu '{device.Name}': {measurement.Value}{measurement.Unit} (próg: >= 25{measurement.Unit})",
+                    IsAcknowledged = false,
+                    CreatedAt = DateTime.UtcNow
+                });
+            }
+        }
     }
 }
