@@ -11,6 +11,7 @@ public class AppDbContext : DbContext
     public DbSet<Device> Devices => Set<Device>();
     public DbSet<Measurement> Measurements => Set<Measurement>();
     public DbSet<Alert> Alerts => Set<Alert>();
+    public DbSet<DeviceLog> DeviceLogs => Set<DeviceLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -112,6 +113,30 @@ public class AppDbContext : DbContext
                   .HasForeignKey(a => a.DeviceId)
                   .IsRequired(false)
                   .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<DeviceLog>(entity =>
+        {
+            entity.HasKey(l => l.Id);
+
+            entity.Property(l => l.Protocol)
+                  .IsRequired()
+                  .HasMaxLength(50)
+                  .HasConversion<string>();
+
+            entity.Property(l => l.IpAddress)
+                  .HasMaxLength(45);
+
+            entity.Property(l => l.ErrorMessage)
+                  .HasMaxLength(1000);
+
+            entity.Property(l => l.ReceivedAt)
+                  .HasDefaultValueSql("GETUTCDATE()");
+
+            entity.HasOne(l => l.Device)
+                  .WithMany(d => d.Logs)
+                  .HasForeignKey(l => l.DeviceId)
+                  .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

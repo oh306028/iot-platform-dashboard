@@ -11,4 +11,5 @@ public class Device
 
     public ICollection<Measurement> Measurements { get; set; } = new List<Measurement>();
     public ICollection<Alert> Alerts { get; set; } = new List<Alert>();
+    public ICollection<DeviceLog> Logs { get; set; } = new List<DeviceLog>();
 }
